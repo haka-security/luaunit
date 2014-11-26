@@ -623,7 +623,7 @@ LuaUnit_MT = { __index = LuaUnit }
 
     SPLITTER = '\n>----------<\n'
 
-    function LuaUnit:protectedCall( classInstance , methodInstance)
+    function LuaUnit:protectedCall( classInstance , methodInstance, methodName)
         -- if classInstance is nil, this is just a function run
         local function err_handler(e)
             return debug.traceback(e..SPLITTER, 4)
@@ -632,9 +632,9 @@ LuaUnit_MT = { __index = LuaUnit }
         local ok=true, errorMsg, stackTrace
         if classInstance then
             -- stupid Lua < 5.2 does not allow xpcall with arguments so let's live with that
-            ok, errorMsg = xpcall( function () methodInstance(classInstance) end, err_handler )
+            ok, errorMsg = xpcall( function () methodInstance(classInstance, methodName) end, err_handler )
         else
-            ok, errorMsg = xpcall( function () methodInstance() end, err_handler )
+            ok, errorMsg = xpcall( function () methodInstance(methodName) end, err_handler )
         end
         if not ok then
             t = strsplit( SPLITTER, errorMsg )
@@ -670,12 +670,12 @@ LuaUnit_MT = { __index = LuaUnit }
 
         -- run setUp first(if any)
         if classInstance and self.isFunction( classInstance.setUp ) then
-            self:protectedCall( classInstance, classInstance.setUp)
+            self:protectedCall( classInstance, classInstance.setUp, methodName)
         end
 
         -- run testMethod()
         if not self.result.currentTestHasFailure then
-            self:protectedCall( classInstance, methodInstance)
+            self:protectedCall( classInstance, methodInstance, methodName )
         end
 
         -- lastly, run tearDown(if any)
